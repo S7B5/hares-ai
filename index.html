@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1d2a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="حارس">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>HARES AI – حارس</title>
+<style>
+:root{color-scheme:dark;--bg:#081722;--panel:#102b3a;--mint:#43d6b5;--muted:#b6c8d2;--line:#294555}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#081722,#102d3b);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#f4fbff;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+main{max-width:620px;margin:auto;padding:22px 0 36px}.brand{display:flex;align-items:center;gap:12px}.shield{width:48px;height:48px;border-radius:15px;background:#153c4b;display:grid;place-items:center;color:var(--mint);font-size:27px}.sub{color:var(--muted);font-size:13px}.hero{margin:22px 0;padding:20px;border:1px solid var(--line);border-radius:22px;background:#0e2634}.hero h1{margin:8px 0;font-size:26px}.status{color:var(--mint);font-weight:700;font-size:13px}.tabs{display:flex;gap:8px;margin:18px 0}.tabs button{flex:1}button{border:0;border-radius:13px;padding:13px 15px;background:#173b4b;color:white;font-weight:700;font-size:15px}button.active,.primary{background:var(--mint);color:#06202a}textarea,input{width:100%;background:#071923;color:white;border:1px solid var(--line);border-radius:14px;padding:14px;font:inherit;font-size:15px}textarea{min-height:130px;resize:vertical}label{display:block;margin:16px 0 8px;font-weight:700}.primary{width:100%;margin-top:12px}.result{display:none;margin-top:16px;padding:16px;border-radius:16px;background:#102b3a;border:1px solid var(--line)}.score{font-size:30px;font-weight:800}.muted{color:var(--muted);font-size:12px;line-height:1.6}.warning{color:#ffd18a}.safe{color:var(--mint)}li{margin:8px 0}.foot{margin-top:22px;color:var(--muted);font-size:11px;line-height:1.6}
+</style>
+</head>
+<body><main>
+<header class="brand"><div class="shield">⬡</div><div><strong>HARES AI – حارس</strong><div class="sub">مساعدك الأول للوقاية الرقمية</div></div></header>
+<section class="hero"><div class="status">● النسخة التجريبية تعمل</div><h1>اكتشف مؤشرات الخطر قبل التفاعل</h1><div class="sub">افحص رسالة أو رابطاً يدوياً واحصل على تفسير أولي للمؤشرات.</div></section>
+<div class="tabs"><button id="msgTab" class="active" onclick="setMode('message')">فحص رسالة</button><button id="urlTab" onclick="setMode('url')">فحص رابط</button></div>
+<label id="fieldLabel" for="input">الصق الرسالة هنا</label>
+<textarea id="input" placeholder="مثال: حسابك سيتم إيقافه، اضغط هنا وأدخل رمز التحقق..."></textarea>
+<button class="primary" onclick="scan()">افحص الآن</button>
+<section class="result" id="result" aria-live="polite"></section>
+<p class="foot">تنبيه: هذا نموذج أولي محلي بقواعد مبسطة. لا يتصل بمصادر سمعة المواقع ولا يضمن كشف الاحتيال، ولا يحجب المواقع ولا يراقب التطبيقات أو الرسائل في الخلفية. لا تدخل كلمات مرور أو رموز تحقق أو بيانات شخصية.</p>
+</main>
+<script>
+let mode='message';
+function setMode(m){mode=m;document.getElementById('msgTab').classList.toggle('active',m==='message');document.getElementById('urlTab').classList.toggle('active',m==='url');document.getElementById('fieldLabel').textContent=m==='message'?'الصق الرسالة هنا':'الصق الرابط هنا';document.getElementById('input').placeholder=m==='message'?'الصق نص الرسالة المشبوهة...':'https://example.com';document.getElementById('result').style.display='none'}
+function scan(){
+ const s=document.getElementById('input').value.trim().toLowerCase();if(!s){alert('أدخل رسالة أو رابطاً أولاً');return}
+ const flags=[];
+ const checks=[
+ [/رمز التحقق|otp|كلمة المرور|password|pin/,'طلب رمز تحقق أو كلمة مرور'],
+ [/عاجل|فوراً|خلال دقائق|urgent|immediately|تجميد الحساب|إيقاف الحساب/,'لغة استعجال أو تهديد بإيقاف الحساب'],
+ [/اربح|جائزة|مبروك|فزت|prize|winner|free gift/,'ادعاء الفوز بجائزة أو مكافأة'],
+ [/اضغط هنا|انقر|click here|verify now|تسجيل الدخول/,'طلب الضغط على رابط أو تسجيل الدخول'],
+ [/بنك|مصرف|شرطة|محكمة|جهة حكومية|police|government/,'ذكر جهة رسمية أو مالية؛ تحقق من المصدر'],
+ [/ابتزاز|هدد|blackmail|انشر صور/,'مؤشرات تهديد أو ابتزاز']
+ ];
+ for(const [re,why] of checks)if(re.test(s))flags.push(why);
+ if(mode==='url'){
+  if(!/^https?:\/\//i.test(s))flags.push('النص لا يبدأ بعنوان ويب واضح');
+  if(/^http:\/\//i.test(s))flags.push('الاتصال لا يستخدم HTTPS');
+  if(/https?:\/\/\d{1,3}(\.\d{1,3}){3}/i.test(s))flags.push('الرابط يستخدم عنوان IP مباشرة');
+  if(/xn--/i.test(s))flags.push('اسم النطاق يحتوي ترميزاً يستحق التحقق');
+  if(/login|secure|verify|account|update/i.test(s))flags.push('اسم النطاق يتضمن كلمات شائعة في صفحات التصيد');
+ }
+ const score=Math.min(95,flags.length*22);
+ const level=score>=60?'مؤشرات اشتباه مرتفعة':score>=25?'يحتاج إلى الحذر':'لم تظهر مؤشرات واضحة';
+ const cls=score>=25?'warning':'safe';
+ const result=document.getElementById('result');
+ result.innerHTML='<div class="sub">النتيجة الأولية</div><div class="score '+cls+'">'+score+'/100</div><strong class="'+cls+'">'+level+'</strong>'+
+ (flags.length?'<ul>'+flags.map(x=>'<li>'+x+'</li>').join('')+'</ul>':'<p>لم ترصد القواعد البسيطة مؤشرات واضحة. هذا لا يعني أن المحتوى آمن.</p>')+
+ '<p class="muted">لا تضغط على الروابط المشبوهة ولا تشارك رموز التحقق أو كلمات المرور. تحقق من الجهة عبر قنواتها الرسمية.</p>';
+ result.style.display='block';
+}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+</script></body></html>
